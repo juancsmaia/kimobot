@@ -17,7 +17,7 @@ class AniListApi {
     private const val URL = "https://graphql.anilist.co"
   }
 
-  internal val objectMapper: ObjectMapper = ObjectMapper()
+  private val objectMapper: ObjectMapper = ObjectMapper()
 
   fun getAnime(busca: String, tipo: String, page: Int?): AniListDTO {
 
@@ -48,17 +48,43 @@ class AniListApi {
     variables["search"] = busca
     variables["type"] = tipo
     variables["page"] = page ?: 1
-    variables["perPage"] = 2
+    variables["perPage"] = 1
 
-    val params: MutableMap<String?, Any?> = HashMap()
-    params["variables"] = variables
+    val params: MutableMap<String, Any> = HashMap()
     params["query"] = query
+    params["variables"] = variables
 
+    return sendRequest(params, null)
+  }
+
+  fun addAnimeToList(id: Int, status: String, accessToken: String): AniListDTO {
+    val mutation = ("mutation (\$mediaId: Int, \$status: MediaListStatus) { "
+        + "    SaveMediaListEntry (mediaId: \$mediaId, status: \$status) { "
+        + "        id "
+        + "        status "
+        + "    } "
+        + "}")
+
+    val variables: MutableMap<String, Any> = HashMap()
+    variables["mediaId"] = id
+    variables["status"] = status
+
+    val params: MutableMap<String, Any> = HashMap()
+    params["query"] = mutation
+    params["variables"] = variables
+
+    return sendRequest(params, accessToken)
+  }
+
+  private fun sendRequest(params: MutableMap<String, Any>, accessToken: String?): AniListDTO {
     return try {
       val client = HttpClientBuilder.create().build()
       val httpPost = HttpPost(URL)
       httpPost.addHeader("Accept", "application/json")
       httpPost.addHeader("Content-Type", "application/json")
+      if (accessToken != null) {
+        httpPost.addHeader("Authorization", accessToken)
+      }
       val jsonObject = JSONObject(params)
       val entity = StringEntity(jsonObject.toString(), ContentType.APPLICATION_JSON)
       httpPost.entity = entity

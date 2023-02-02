@@ -10,27 +10,27 @@ import org.kimobot.kimo.dto.enums.Buttons
 class MessageSender {
 
   fun sendAniListMessageInfo(event: MessageReceivedEvent, tipo: String, busca: String, dto: AniListDTO) {
-    val me = mountAnilistMessageInfo(tipo, busca, dto)
+    val me = mountAniListMessageInfo(tipo, busca, dto)
 
     event
       .message
       .replyEmbeds(me)
-      .setActionRow(Button.primary(Buttons.NEXT.id, Buttons.NEXT.tag))
+      .setActionRow(Button.primary(Buttons.NEXT.id, Buttons.NEXT.tag), Button.success(Buttons.ADD.id, Buttons.ADD.tag))
       .queue()
   }
 
-  fun mountAnilistMessageInfo(tipo: String, busca: String, dto: AniListDTO): MessageEmbed {
+  fun mountAniListMessageInfo(tipo: String, busca: String, dto: AniListDTO): MessageEmbed {
     val eb = EmbedBuilder()
 
-    val pageInfo = dto.data?.page?.pageInfo
+    val pageInfo = dto.data!!.page!!.pageInfo
 
-    eb.setTitle("Página ${pageInfo?.currentPage} / ${pageInfo?.lastPage}")
+    eb.setTitle("Página ${pageInfo!!.currentPage} / ${pageInfo.lastPage}")
 
-    val medias = dto.data?.page?.media
+    val medias = dto.data!!.page!!.media
     medias?.iterator()?.forEach {
-      val titulo = it!!.title?.romaji
+      val titulo = it!!.title!!.romaji
       val url = "https://anilist.co/anime/${it.id}/"
-      val generos = it.genres?.joinToString(", ")
+      val generos = it.genres!!.joinToString(", ")
 
       eb.addField(MessageEmbed.Field("Título", titulo, false))
 
@@ -47,7 +47,7 @@ class MessageSender {
       eb.addField(MessageEmbed.Field("Gêneros", generos, false))
 
       eb.addField(MessageEmbed.Field("", String.format("[AniList](%s)", url), false))
-      eb.setFooter(String.format("Dados: Tipo: [%s], Buscado: [%s]", tipo, busca))
+      eb.setFooter("Dados: Tipo: [$tipo], Buscado: [$busca], Id [${it.id}]")
     }
 
     return eb.build()

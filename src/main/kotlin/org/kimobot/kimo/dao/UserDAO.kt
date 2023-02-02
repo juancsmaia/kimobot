@@ -28,4 +28,21 @@ class UserDAO {
     }
   }
 
+  fun getUserTokenById(idUser: String): String {
+
+    try {
+
+      val select = "SELECT * FROM user_token " +
+          "WHERE id_user = ?"
+
+      val user = qr.query(select, BeanHandler(User::class.java), idUser)
+      return user.token
+    } catch (e: SQLException) {
+      val error = "Error getting token for user $idUser"
+      log.error(error, e)
+      throw RuntimeException(error, e)
+    }
+
+  }
+
 }
