@@ -1,5 +1,3 @@
-@file:JvmName("Main")
-
 package org.kimobot.kimo
 
 import net.dv8tion.jda.api.JDABuilder
@@ -10,7 +8,7 @@ import org.kimobot.kimo.listener.ButtonListener
 import org.kimobot.kimo.listener.MenuListener
 import org.kimobot.kimo.listener.MessageListener
 import org.kimobot.kimo.listener.ModalListener
-import org.kimobot.kimo.util.DatabaseConnection
+import org.kimobot.kimo.util.DataBaseConnection
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.util.concurrent.TimeUnit
@@ -42,7 +40,7 @@ class KimoBotApplication {
     }
 
     private fun runFlyway() {
-      val flyway = Flyway.configure().dataSource(DatabaseConnection.fonteDeDados).load()
+      val flyway = Flyway.configure().dataSource(DataBaseConnection.dataSource).load()
       flyway.migrate()
     }
 

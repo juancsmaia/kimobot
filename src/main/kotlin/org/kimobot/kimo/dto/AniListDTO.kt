@@ -31,8 +31,11 @@ data class AniListDTO(var data: Data? = null) {
       var chapters: Int? = -1,
       var volumes: Int? = -1,
       var genres: List<String>? = null,
-      var title: Title? = null
+      var title: Title? = null,
+      var coverImage: CoverImage? = null
     ) {
+
+      class CoverImage(var medium: String? = null, var large: String? = null, var color: String? = null)
 
       class Title(var romaji: String? = null)
     }

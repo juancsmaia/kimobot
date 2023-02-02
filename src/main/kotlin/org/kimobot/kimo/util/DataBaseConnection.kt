@@ -7,35 +7,30 @@ import java.sql.Connection
 import java.sql.SQLException
 import java.util.*
 
-class DatabaseConnection {
+class DataBaseConnection {
 
   companion object {
-    val fonteDeDados: BasicDataSource = BasicDataSource()
+    val dataSource: BasicDataSource = BasicDataSource()
 
     init {
       val profile = profileArgument
       val properties = String.format("application.properties", profile)
       try {
-        DatabaseConnection::class.java.classLoader.getResourceAsStream(properties).use { rs ->
+        DataBaseConnection::class.java.classLoader.getResourceAsStream(properties).use { rs ->
           val prop = Properties()
           prop.load(rs)
-          fonteDeDados.driverClassName = prop.getProperty("db.classPath")
-          fonteDeDados.url = prop.getProperty("db.url")
-          fonteDeDados.username = prop.getProperty("db.username")
-          fonteDeDados.password = prop.getProperty("db.password")
-          fonteDeDados.maxActive = 10
-          fonteDeDados.maxIdle = 5
-          fonteDeDados.minIdle = 2
-          fonteDeDados.initialSize = 10
+          dataSource.driverClassName = prop.getProperty("db.classPath")
+          dataSource.url = prop.getProperty("db.url")
+          dataSource.username = prop.getProperty("db.username")
+          dataSource.password = prop.getProperty("db.password")
+          dataSource.maxActive = 10
+          dataSource.maxIdle = 5
+          dataSource.minIdle = 2
+          dataSource.initialSize = 10
         }
       } catch (e: IOException) {
         throw RuntimeException("Error loading file")
       }
-    }
-
-    @Throws(SQLException::class)
-    fun getConn(): Connection {
-      return fonteDeDados.connection
     }
 
     private val profileArgument: String?

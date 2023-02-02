@@ -30,7 +30,6 @@ class MessageListener : ListenerAdapter() {
       return
     }
 
-    log.debug("Comando recebido $mensagem")
     val comandoCru = mensagem.replace("!", "").split(" ")
     val command = Command.pegarComando(comandoCru[0]) ?: return
 
@@ -44,7 +43,7 @@ class MessageListener : ListenerAdapter() {
 
   private fun cadastro(event: MessageReceivedEvent) {
     val url = "https://anilist.co/api/v2/oauth/authorize?client_id=11086&response_type=token"
-    val menssagem = String.format("[Clique aqui para autorizar o KimoBot](%s)", url)
+    val message = String.format("[Clique aqui para autorizar o KimoBot](%s)", url)
 
     val eb = EmbedBuilder()
     eb.setTitle("Autenticação")
@@ -55,7 +54,7 @@ class MessageListener : ListenerAdapter() {
         true
       )
     )
-      .addField(MessageEmbed.Field("", menssagem, false))
+      .addField(MessageEmbed.Field("", message, false))
       .addField(
         MessageEmbed.Field(
           "", "Clique no Botão abaixo para enviar o token de autenticação.", true
@@ -86,7 +85,7 @@ class MessageListener : ListenerAdapter() {
     val tipo = comandoCru[1].lowercase()
     val aniListType = AniListType.getType(tipo)
     if (aniListType == null) {
-      event.message.reply("Tipo Inválido")
+      event.message.reply("Invalid Type")
       return
     }
 

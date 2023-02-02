@@ -6,6 +6,7 @@ import net.dv8tion.jda.api.events.message.MessageReceivedEvent
 import net.dv8tion.jda.api.interactions.components.buttons.Button
 import org.kimobot.kimo.dto.AniListDTO
 import org.kimobot.kimo.dto.enums.Buttons
+import java.awt.Color
 
 class MessageSender {
 
@@ -24,7 +25,7 @@ class MessageSender {
 
     val pageInfo = dto.data!!.page!!.pageInfo
 
-    eb.setTitle("Página ${pageInfo!!.currentPage} / ${pageInfo.lastPage}")
+    eb.setTitle("Page ${pageInfo!!.currentPage} / ${pageInfo.lastPage}")
 
     val medias = dto.data!!.page!!.media
     medias?.iterator()?.forEach {
@@ -32,22 +33,25 @@ class MessageSender {
       val url = "https://anilist.co/anime/${it.id}/"
       val generos = it.genres!!.joinToString(", ")
 
-      eb.addField(MessageEmbed.Field("Título", titulo, false))
+      eb.setThumbnail(it.coverImage!!.large)
+      val color = Color.decode(it.coverImage!!.color)
+      eb.setColor(color)
+      eb.addField(MessageEmbed.Field("Title", titulo, false))
 
       if (it.episodes == null) {
         val capitulos = if (it.chapters == null) "?" else it.chapters.toString()
         val volumes = if (it.volumes == null) "?" else it.volumes.toString()
-        eb.addField(MessageEmbed.Field("Capítulos", capitulos, false))
+        eb.addField(MessageEmbed.Field("Chapters", capitulos, false))
         eb.addField(MessageEmbed.Field("Volumes", volumes, false))
       } else {
-        eb.addField(MessageEmbed.Field("Episódios", it.episodes.toString(), false))
+        eb.addField(MessageEmbed.Field("Episodes", it.episodes.toString(), false))
       }
 
       eb.addField(MessageEmbed.Field("Status", it.status, false))
-      eb.addField(MessageEmbed.Field("Gêneros", generos, false))
+      eb.addField(MessageEmbed.Field("Genres", generos, false))
 
       eb.addField(MessageEmbed.Field("", String.format("[AniList](%s)", url), false))
-      eb.setFooter("Dados: Tipo: [$tipo], Buscado: [$busca], Id [${it.id}]")
+      eb.setFooter("Data: Type: [$tipo], Search: [$busca], Id [${it.id}]")
     }
 
     return eb.build()

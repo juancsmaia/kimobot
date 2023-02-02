@@ -1,11 +1,17 @@
-import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
     kotlin("jvm") version "1.7.10"
+    id("com.github.johnrengelman.shadow") version("7.1.2")
+    id("java")
+    application
+}
+
+application {
+    mainClass.set("org.kimobot.kimo.KimoBotApplication")
 }
 
 group = "org.kimobot"
-version = "1.0-SNAPSHOT"
+version = "1.0.0"
 
 repositories {
     mavenLocal()
@@ -14,7 +20,6 @@ repositories {
 }
 
 dependencies {
-    testImplementation(kotlin("test"))
     implementation("net.dv8tion:JDA:5.0.0-alpha.22") {
         exclude(module="opus-java")
     }
@@ -28,18 +33,8 @@ dependencies {
     implementation("mysql:mysql-connector-java:8.0.27")
     implementation("commons-dbcp:commons-dbcp:1.4")
     implementation("commons-dbutils:commons-dbutils:1.7")
-    implementation("org.apache.commons:commons-text:1.8")
-    implementation("org.apache.commons:commons-lang3:3.10")
     implementation("org.apache.httpcomponents:httpclient:4.5.14")
 
     implementation("org.flywaydb:flyway-core:8.0.4")
     implementation("org.json:json:20180130")
-}
-
-tasks.test {
-    useJUnitPlatform()
-}
-
-tasks.withType<KotlinCompile> {
-    kotlinOptions.jvmTarget = "1.8"
 }

@@ -104,7 +104,7 @@ class ButtonListener : ListenerAdapter() {
 
   private fun receiveToken(event: ButtonInteractionEvent) {
     val tokenInput = TextInput.create(ActionComponents.TOKEN.id, ActionComponents.TOKEN.tag, TextInputStyle.PARAGRAPH)
-      .setPlaceholder("Token de Autorização")
+      .setPlaceholder("Authorization Token")
       .build()
     val modal = Modal.create(Modals.TOKEN.id, Modals.TOKEN.tag).addActionRow(tokenInput).build()
     event.replyModal(modal).queue()
