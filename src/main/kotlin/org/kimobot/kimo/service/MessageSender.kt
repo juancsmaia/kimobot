@@ -34,8 +34,6 @@ class MessageSender {
       val generos = it.genres!!.joinToString(", ")
 
       eb.setThumbnail(it.coverImage!!.large)
-      val color = Color.decode(it.coverImage!!.color)
-      eb.setColor(color)
       eb.addField(MessageEmbed.Field("Title", titulo, false))
 
       if (it.episodes == null) {
