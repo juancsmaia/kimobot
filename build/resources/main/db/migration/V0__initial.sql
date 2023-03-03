@@ -1,7 +1,7 @@
 CREATE TABLE `roulette` (
   `id` int NOT NULL AUTO_INCREMENT,
   `name` varchar(255) NOT NULL,
-  `active` bit NOT NULL DEFAULT 0,
+  `active` varchar(255) NOT NULL DEFAULT 0,
   `guild_id` varchar(255) NOT NULL,
   PRIMARY KEY (`id`)
 );

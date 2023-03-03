@@ -41,7 +41,7 @@ class MessageListener : ListenerAdapter() {
 
     when (command) {
       Command.HELP -> help(event)
-      Command.INFO -> info(event, crudeCommand)
+      Command.INFO -> info(event, crudeCommand[1])
       Command.CLEAR -> clearMessages(event)
       Command.NEW_ROULETTE -> newRoulette(event, crudeCommand[1])
       Command.ROULETTE -> getRouletteData(event, crudeCommand[1])
@@ -60,21 +60,21 @@ class MessageListener : ListenerAdapter() {
   private fun newRoulette(event: MessageReceivedEvent, name: String) {
 
     val guildId = event.guild.id
-    val maybeRoulette = rouletteDAO.getByNameAndGuildId(name, guildId)
-    if (maybeRoulette != null) {
-//      if (maybeRoulette[0].active) {
-//        messageSender.sendMessage(
-//          event, "Uma Roleta com o nome [${name}] já existe e está ativa."
-//        )
-//        return
-//      }
+    val roulette = rouletteDAO.getByNameAndGuildId(name, guildId)
+    if (roulette != null) {
+      if (roulette.active == RouletteStatus.ACTIVE.name) {
+        messageSender.sendMessage(
+          event, "Uma Roleta com o nome [${name}] já existe e está ativa. Use o comando *!roul $name*"
+        )
+        return
+      }
     }
 
-    val roulette = Roulette(name = name, guildId = guildId, active = RouletteStatus.ACTIVE.name)
-    val rouletteId: Int = rouletteDAO.createRoulette(roulette)
+    val newRoulette = Roulette(name = name, guildId = guildId, active = RouletteStatus.ACTIVE.name)
+    val rouletteId: Int = rouletteDAO.createRoulette(newRoulette)
     log.info("Roulette created with ID: [$rouletteId]")
 
-    event.message.reply("Roleta criada. Utilize [!roul $name] para gerenciar a roleta.").queue()
+    event.message.reply("Roleta criada. Utilize [*!roul $name*] para gerenciar a roleta.").queue()
   }
 
   private fun getRouletteData(event: MessageReceivedEvent, name: String) {
@@ -94,40 +94,33 @@ class MessageListener : ListenerAdapter() {
 
   private fun help(event: MessageReceivedEvent) {
     val eb = EmbedBuilder()
-    eb.setTitle("Ajuda")
-    eb.addField(MessageEmbed.Field("Comandos", "", false))
-      .addField(
-        MessageEmbed.Field(
-          "!${Command.NEW_ROULETTE.tag}",
-          "Comando para criar uma nova roleta. Evite nomes com espaços" +
-              "\n!newroul <nome>" +
-              "\nExemplo: !newroul Roleta",
-          false
-        )
+    eb.setTitle("Comandos").addField(
+      MessageEmbed.Field(
+        "!${Command.NEW_ROULETTE.tag}",
+        "Comando para criar uma nova roleta. Evite nomes com espaços\n!newroul <nome>\nExemplo: !newroul Roleta",
+        false
       )
-      .addField(
-        MessageEmbed.Field(
-          "!${Command.ROULETTE.tag}",
-          "Comando para ver/buscar os dados de uma roleta existente" +
-              "\n!roul <nome>" +
-              "\n!roul Roleta",
-          false
-        )
+    ).addField(
+      MessageEmbed.Field(
+        "!${Command.ROULETTE.tag}",
+        "Comando para ver/buscar os dados de uma roleta existente\n!roul <nome>\nExemplo: !roul Roleta",
+        false
       )
-      .addField(
-        MessageEmbed.Field(
-          "!${Command.INFO.tag}",
-          "Comando para buscar informações de animes e mangás no Anilist." +
-              "\nVocê receberá a lista de anime que correspondam com a pesquisa em 1 por página para que possa adicionar a roleta." +
-              "\n!info <tipo> <busca>" +
-              "\nExemplo: !info anime naruto\n",
-          false
-        )
+    ).addField(
+      MessageEmbed.Field(
+        "!${Command.CLOSE.tag}",
+        "Comando utilizado para encerrar uma roleta.\nA Roleta encerrada não receberá novas atualizações ou interações, porém poderá ser consultada através do comando *!roul*\n!close <nome>\nExemplo: !close Roleta",
+        false
       )
+    ).addField(
+      MessageEmbed.Field(
+        "!${Command.INFO.tag}",
+        "Comando para buscar informações de animes no Anilist.\nVocê receberá a lista de anime que correspondam com a pesquisa em 1 por página para que possa adicionar a roleta.\n!info <busca>\nExemplo: !info naruto\n",
+        false
+      )
+    )
 
-    event.message
-      .replyEmbeds(eb.build())
-      .queue()
+    event.message.replyEmbeds(eb.build()).queue()
   }
 
   private fun registration(event: MessageReceivedEvent) {
@@ -142,51 +135,30 @@ class MessageListener : ListenerAdapter() {
         "Para se autenticar clique no Link abaixo. Você será redirecionado para o site Anilist e receberá um Token",
         true
       )
+    ).addField(MessageEmbed.Field("", message, false)).addField(
+      MessageEmbed.Field(
+        "", "Clique no Botão abaixo para enviar o token de autenticação.", true
+      )
+    ).addField(
+      MessageEmbed.Field(
+        "",
+        "Você pode revogar esta autorização diretamente no Anilist em Perfil -> Settings -> Apps -> Revoke App",
+        false
+      )
+    ).addField(
+      MessageEmbed.Field(
+        "", "Esta mensagem será excluída assim que o token for recebido.", false
+      )
     )
-      .addField(MessageEmbed.Field("", message, false))
-      .addField(
-        MessageEmbed.Field(
-          "", "Clique no Botão abaixo para enviar o token de autenticação.", true
-        )
-      )
-      .addField(
-        MessageEmbed.Field(
-          "",
-          "Você pode revogar esta autorização diretamente no Anilist em Perfil -> Settings -> Apps -> Revoke App",
-          false
-        )
-      )
-      .addField(
-        MessageEmbed.Field(
-          "", "Esta mensagem será excluída assim que o token for recebido.", false
-        )
-      )
 
-    event
-      .message
-      .replyEmbeds(eb.build())
-      .setActionRow(Button.primary(Buttons.TOKEN.id, Buttons.TOKEN.tag))
-      .queue()
+    event.message.replyEmbeds(eb.build()).setActionRow(Button.primary(Buttons.TOKEN.id, Buttons.TOKEN.tag)).queue()
   }
 
-  private fun info(event: MessageReceivedEvent, crudeCommand: List<String>) {
+  private fun info(event: MessageReceivedEvent, search: String) {
 
-    val type = crudeCommand[1].lowercase()
-    val aniListType = AniListType.getType(type)
-    if (aniListType == null) {
-      event.message.reply("Invalid Type")
-      return
-    }
+    val aniListDTO = aniListApi.findAnimeSearch(search, null)
 
-    val sb = StringBuilder()
-    for (i in 2 until crudeCommand.size) {
-      sb.append(crudeCommand[i]).append(" ")
-    }
-
-    val search = sb.toString().trim()
-    val aniListDTO = aniListApi.findAnimeSearch(search, aniListType.name, null)
-
-    messageSender.sendAniListMessageInfo(event, aniListType.name, search, aniListDTO)
+    messageSender.sendAniListMessageInfo(event, search, aniListDTO)
   }
 
   private fun clearMessages(event: MessageReceivedEvent) {

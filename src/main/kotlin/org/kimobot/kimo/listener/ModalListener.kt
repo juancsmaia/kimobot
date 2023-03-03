@@ -8,6 +8,7 @@ import org.kimobot.kimo.dao.RouletteDAO
 import org.kimobot.kimo.dao.UserDAO
 import org.kimobot.kimo.dto.enums.ActionComponents
 import org.kimobot.kimo.dto.enums.Modals
+import org.kimobot.kimo.dto.enums.RouletteStatus
 import org.kimobot.kimo.model.Anime
 import org.kimobot.kimo.service.AniListApi
 import org.kimobot.kimo.service.MessageSender
@@ -46,10 +47,15 @@ class ModalListener : ListenerAdapter() {
       return
     }
 
+    if (roulette.active != RouletteStatus.ACTIVE.name) {
+      messageSender.sendMessage(event, MessageUtil.ROULETTE_INACTIVE)
+      return
+    }
+
     val metaData = MessageUtil.getMetaData(event)
     val animeId = metaData!![2].toString()
 
-    saveAnimesToRoulette(arrayOf(animeId), roulette.id!!)
+    saveAnimesToRoulette(listOf(animeId), roulette.id!!)
 
     event.hook.retrieveOriginal().complete().reply("Anime adicionado à roleta.").queue()
   }
@@ -107,19 +113,17 @@ class ModalListener : ListenerAdapter() {
     val rouletteId = Integer.parseInt(title[0].trim())
     val rouletteName = title[1].trim()
 
-    val animeIds = event.interaction.getValue(ActionComponents.ANIME_ID.id)!!.asString.split(",")
-      .dropLastWhile { it.isEmpty() }
-      .toTypedArray()
+    val animeIds =
+      event.interaction.getValue(ActionComponents.ANIME_ID.id)!!.asString.split(",")
 
     saveAnimesToRoulette(animeIds, rouletteId)
     val animes: List<Anime> = animeDAO.getAllByRoulette(rouletteId)
 
-    val me: MessageEmbed =
-      messageSender.mountRouletteMessage(animes, rouletteName, rouletteId)
+    val me: MessageEmbed = messageSender.mountRouletteMessage(animes, rouletteName, rouletteId)
     event.hook.editMessageEmbedsById(messageId, me).queue()
   }
 
-  private fun saveAnimesToRoulette(animeIds: Array<String>, rouletteId: Int) {
+  private fun saveAnimesToRoulette(animeIds: List<String>, rouletteId: Int) {
     log.debug("Collecting anime data for [{}] animes", animeIds.size)
     var rouletteIdx: Int = animeDAO.countByRouletteId(rouletteId)
     rouletteIdx++

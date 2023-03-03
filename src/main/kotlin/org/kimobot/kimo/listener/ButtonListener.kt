@@ -56,10 +56,6 @@ class ButtonListener : ListenerAdapter() {
   }
 
   private fun addFromInfoToRoulette(event: ButtonInteractionEvent) {
-    if (!validateActiveRoulette(event)) {
-      messageSender.sendMessage(event, MessageUtil.ROULETTE_INACTIVE)
-      return
-    }
     val rouletteInput =
       TextInput.create(ActionComponents.ROULETTE_NAME.id, ActionComponents.ROULETTE_NAME.tag, TextInputStyle.SHORT)
         .build()
@@ -72,18 +68,16 @@ class ButtonListener : ListenerAdapter() {
 
   private fun backPage(event: ButtonInteractionEvent) {
     val typeSearch = MessageUtil.getMetaData(event) as List<*>
-    val type = typeSearch[0].toString()
-    val search = typeSearch[1].toString()
+    val search = typeSearch[0].toString()
     val page: Int = getPage(event, false)
-    mountPage(event, search, type, page)
+    mountPage(event, search, page)
   }
 
   private fun nextPage(event: ButtonInteractionEvent) {
     val typeSearch = MessageUtil.getMetaData(event) as List<*>
-    val type = typeSearch[0].toString()
-    val search = typeSearch[1].toString()
+    val search = typeSearch[0].toString()
     val page: Int = getPage(event, true)
-    mountPage(event, search, type, page)
+    mountPage(event, search, page)
   }
 
   private fun getPage(event: ButtonInteractionEvent, next: Boolean): Int {
@@ -96,20 +90,18 @@ class ButtonListener : ListenerAdapter() {
   }
 
   private fun mountPage(
-    event: ButtonInteractionEvent, busca: String, tipo: String, pagina: Int
+    event: ButtonInteractionEvent, search: String, page: Int
   ) {
 
-    val type = AniListType.getType(tipo.lowercase())
-
     event.deferEdit().queue()
-    val aniListDTO: AniListDTO = aniListApi.findAnimeSearch(busca, tipo, pagina)
+    val aniListDTO: AniListDTO = aniListApi.findAnimeSearch(search, page)
     if (aniListDTO.data!!.page!!.media!!.isEmpty()) {
       return
     }
 
-    val me: MessageEmbed = messageSender.mountAniListMessageInfo(type!!.name, busca, aniListDTO)
+    val me: MessageEmbed = messageSender.mountAniListMessageInfo(search, aniListDTO)
     val pageInfo = aniListDTO.data!!.page!!.pageInfo
-    val buttons: ArrayList<ActionComponent> = if (pagina > 1) {
+    val buttons: ArrayList<ActionComponent> = if (page > 1) {
       if (pageInfo!!.hasNextPage!!) {
         arrayListOf(
           Button.primary(Buttons.BACK.id, Buttons.BACK.tag),

@@ -19,7 +19,7 @@ class AniListApi {
 
   private val objectMapper: ObjectMapper = ObjectMapper()
 
-  fun findAnimeSearch(search: String, type: String, page: Int?): AniListDTO {
+  fun findAnimeSearch(search: String, page: Int?): AniListDTO {
 
     val query = ("{ "
         + "    Page (page: ${page ?: 1}, perPage: 1) { "
@@ -30,7 +30,7 @@ class AniListApi {
         + "            hasNextPage "
         + "            perPage "
         + "        } "
-        + "        media (search: \"$search\", type: $type, sort: SEARCH_MATCH) { "
+        + "        media (search: \"$search\", type: ANIME, sort: SEARCH_MATCH) { "
         + "            coverImage { "
         + "                 medium "
         + "                 large "

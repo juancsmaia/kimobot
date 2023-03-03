@@ -2,6 +2,7 @@ package org.kimobot.kimo.service
 
 import net.dv8tion.jda.api.EmbedBuilder
 import net.dv8tion.jda.api.entities.MessageEmbed
+import net.dv8tion.jda.api.events.interaction.ModalInteractionEvent
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent
 import net.dv8tion.jda.api.interactions.components.buttons.Button
@@ -12,8 +13,8 @@ import org.kimobot.kimo.model.Anime
 
 class MessageSender {
 
-  fun sendAniListMessageInfo(event: MessageReceivedEvent, tipo: String, busca: String, dto: AniListDTO) {
-    val me = mountAniListMessageInfo(tipo, busca, dto)
+  fun sendAniListMessageInfo(event: MessageReceivedEvent, search: String, dto: AniListDTO) {
+    val me = mountAniListMessageInfo(search, dto)
 
     event
       .message
@@ -25,7 +26,7 @@ class MessageSender {
       .queue()
   }
 
-  fun mountAniListMessageInfo(type: String, search: String, dto: AniListDTO): MessageEmbed {
+  fun mountAniListMessageInfo(search: String, dto: AniListDTO): MessageEmbed {
     val eb = EmbedBuilder()
 
     val pageInfo = dto.data!!.page!!.pageInfo
@@ -68,7 +69,7 @@ class MessageSender {
         )
       )
 
-      eb.setFooter("Data: Type: [$type], Search: [$search], ID [${it.id}]")
+      eb.setFooter("Search [$search] - ID [${it.id}]")
     }
 
     return eb.build()
@@ -107,6 +108,10 @@ class MessageSender {
 
   fun sendMessage(event: ButtonInteractionEvent, message: String) {
     event.message.reply(message).queue()
+  }
+
+  fun sendMessage(event: ModalInteractionEvent, message: String) {
+    event.hook.retrieveOriginal().complete().reply(message).queue()
   }
 
   fun sendRollResult(event: ButtonInteractionEvent, sortedAnime: Anime) {
