@@ -38,7 +38,7 @@ class KimoBotApplication {
         .build()
 
       jda.awaitReady()
-      log.debug("Bot Ready!")
+      log.info("Bot Ready!")
     }
 
     private fun runFlyway() {

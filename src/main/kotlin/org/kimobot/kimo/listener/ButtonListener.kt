@@ -49,6 +49,7 @@ class ButtonListener : ListenerAdapter() {
 
     val animeIdInput =
       TextInput.create(ActionComponents.ANIME_ID.id, ActionComponents.ANIME_ID.tag, TextInputStyle.SHORT)
+        .setPlaceholder("IDs no Anilist separados com vírgula (1,20)")
         .build()
 
     val modal = Modal.create(Modals.ANIME_ADD.id, Modals.ANIME_ADD.tag).addActionRow(animeIdInput).build()
@@ -121,7 +122,7 @@ class ButtonListener : ListenerAdapter() {
 
   private fun receiveToken(event: ButtonInteractionEvent) {
     val tokenInput = TextInput.create(ActionComponents.TOKEN.id, ActionComponents.TOKEN.tag, TextInputStyle.PARAGRAPH)
-      .setPlaceholder("Authorization Token")
+      .setPlaceholder("Token de Autorização")
       .build()
     val modal = Modal.create(Modals.TOKEN.id, Modals.TOKEN.tag).addActionRow(tokenInput).build()
     event.replyModal(modal).queue()
@@ -155,12 +156,12 @@ class ButtonListener : ListenerAdapter() {
   private fun editAnimeModal(): Modal {
     val textAnimeIdx =
       TextInput.create(ActionComponents.ANIME_IDX.id, ActionComponents.ANIME_IDX.tag, TextInputStyle.SHORT)
-        .setPlaceholder("Anime's Roulette ID")
+        .setPlaceholder("ID do anime na Roleta")
         .build()
 
     val textAnimeWatched =
       TextInput.create(ActionComponents.ANIME_WATCHED.id, ActionComponents.ANIME_WATCHED.tag, TextInputStyle.SHORT)
-        .setPlaceholder("Number of watched episodes")
+        .setPlaceholder("Número de episódios assistidos")
         .build()
 
     return Modal.create(Modals.ANIME_EDIT.id, Modals.ANIME_EDIT.tag)
@@ -171,7 +172,7 @@ class ButtonListener : ListenerAdapter() {
   private fun createRemoveAnimeModal(): Modal {
     val textInput =
       TextInput.create(ActionComponents.ANIME_ID.id, ActionComponents.ANIME_ID.tag, TextInputStyle.SHORT)
-        .setPlaceholder("Anime's Roulette ID")
+        .setPlaceholder("ID do anime na Roleta")
         .build()
 
     return Modal.create(Modals.ANIME_REMOVE.id, Modals.ANIME_REMOVE.tag).addActionRow(textInput).build()

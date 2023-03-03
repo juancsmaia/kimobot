@@ -124,18 +124,18 @@ class ModalListener : ListenerAdapter() {
   }
 
   private fun saveAnimesToRoulette(animeIds: List<String>, rouletteId: Int) {
-    log.debug("Collecting anime data for [{}] animes", animeIds.size)
+    log.info("Collecting anime data for [{}] animes", animeIds.size)
     var rouletteIdx: Int = animeDAO.countByRouletteId(rouletteId)
     rouletteIdx++
     for (animeId in animeIds) {
-      log.debug("Collecting Anime ID [{}]", animeId)
+      log.info("Collecting Anime ID [{}]", animeId)
 
       val anilistDTO = aniListApi.getAnimeById(animeId)
       val title = anilistDTO.data!!.media!!.title!!.romaji
       val episodes = anilistDTO.data!!.media!!.episodes
       val url = "https://anilist.co/anime/${anilistDTO.data!!.media!!.id}"
 
-      log.debug("Successfully collected anime [{}]", title)
+      log.info("Successfully collected anime [{}]", title)
 
       val anime =
         Anime(name = title, url = url, episodes = episodes, rouletteIdx = rouletteIdx++, rouletteId = rouletteId)
