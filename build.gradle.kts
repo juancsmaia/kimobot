@@ -34,6 +34,7 @@ dependencies {
     implementation("commons-dbcp:commons-dbcp:1.4")
     implementation("commons-dbutils:commons-dbutils:1.7")
     implementation("org.apache.httpcomponents:httpclient:4.5.14")
+    implementation("org.apache.commons:commons-text:1.8")
 
     implementation("org.flywaydb:flyway-core:8.0.4")
     implementation("org.json:json:20180130")

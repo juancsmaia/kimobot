@@ -1,6 +1,7 @@
 package org.kimobot.kimo
 
 import net.dv8tion.jda.api.JDABuilder
+import net.dv8tion.jda.api.entities.Activity
 import net.dv8tion.jda.api.requests.GatewayIntent
 import net.dv8tion.jda.api.requests.RestAction
 import org.flywaydb.core.Flyway
@@ -33,6 +34,7 @@ class KimoBotApplication {
       val jda = JDABuilder.createDefault(token)
         .addEventListeners(MessageListener(), ButtonListener(), ModalListener(), MenuListener())
         .enableIntents(GatewayIntent.MESSAGE_CONTENT)
+        .setActivity(Activity.playing("!help"))
         .build()
 
       jda.awaitReady()

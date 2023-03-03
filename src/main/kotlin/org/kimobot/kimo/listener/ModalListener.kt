@@ -1,49 +1,143 @@
 package org.kimobot.kimo.listener
 
+import net.dv8tion.jda.api.entities.MessageEmbed
 import net.dv8tion.jda.api.events.interaction.ModalInteractionEvent
 import net.dv8tion.jda.api.hooks.ListenerAdapter
+import org.kimobot.kimo.dao.AnimeDAO
+import org.kimobot.kimo.dao.RouletteDAO
 import org.kimobot.kimo.dao.UserDAO
 import org.kimobot.kimo.dto.enums.ActionComponents
-import org.kimobot.kimo.dto.enums.AniListStatus
 import org.kimobot.kimo.dto.enums.Modals
+import org.kimobot.kimo.model.Anime
 import org.kimobot.kimo.service.AniListApi
-import org.kimobot.kimo.util.Parser
+import org.kimobot.kimo.service.MessageSender
+import org.kimobot.kimo.util.MessageUtil
 import org.slf4j.LoggerFactory
 
 class ModalListener : ListenerAdapter() {
 
   private val log = LoggerFactory.getLogger(javaClass)
-  private val userDao = UserDAO()
   private val aniListApi = AniListApi()
+  private val userDao = UserDAO()
+  private val animeDAO = AnimeDAO()
+  private val messageSender = MessageSender()
+  private val rouletteDAO = RouletteDAO()
 
   override fun onModalInteraction(event: ModalInteractionEvent) {
     when (Modals.getModal(event.modalId)) {
       Modals.TOKEN -> saveUserAndToken(event)
-      Modals.ADD -> updateAniList(event)
+      Modals.ANIME_ADD -> addAnimeToRoulette(event)
+      Modals.ANIME_EDIT -> editAnimeFromRoulette(event)
+      Modals.ANIME_REMOVE -> removeAnimeFromRoulette(event)
+      Modals.INFO_ANIME_ADD -> infoAnimeAddToRoulette(event)
       null -> {}
     }
   }
 
-  private fun updateAniList(event: ModalInteractionEvent) {
+  private fun infoAnimeAddToRoulette(event: ModalInteractionEvent) {
     event.deferEdit().queue()
 
-    val originalMessage = event.hook.retrieveOriginal().complete()
-    val embed = originalMessage.embeds.firstOrNull()
-    val parser = Parser()
-    val footerData = parser.parseBetween(embed!!.footer!!.text) as List<String>
-    val id = footerData[2].toInt()
+    val rouletteName = event.interaction.getValue(ActionComponents.ROULETTE_NAME.id)!!.asString
+    val guildId = event.guild!!.id
 
-    val idStatus = event.interaction.getValue(ActionComponents.STATUS_INPUT.id)!!.asString
-    val aniListStatus = AniListStatus.getStatus(idStatus)
-    if (aniListStatus == null) {
-      event.reply("Status inválido").queue()
+    val rouletteId = rouletteDAO.getByNameAndGuildId(rouletteName, guildId)
+    if (rouletteId == null) {
+      event.hook.retrieveOriginal().complete().reply("Roleta [$rouletteName] não encontrada.").queue()
       return
     }
 
-    val idUser = event.user.id
-    val accessToken = userDao.getUserTokenById(idUser)
+    val metaData = MessageUtil.getMetaData(event)
+    val animeId = metaData!![2].toString()
 
-    aniListApi.addAnimeToList(id, aniListStatus.name, accessToken)
+    saveAnimesToRoulette(arrayOf(animeId), rouletteId)
+
+    event.hook.retrieveOriginal().complete().reply("Anime adicionado à roleta.").queue()
+  }
+
+  private fun removeAnimeFromRoulette(event: ModalInteractionEvent) {
+    event.deferEdit().queue()
+
+    val message = event.hook.retrieveOriginal().complete()
+    val messageId = message.id
+
+    val title = message.embeds[0].title!!.split("-")
+    val rouletteId = Integer.parseInt(title[0].trim())
+    val rouletteName = title[1].trim()
+
+    val animeIdx = event.interaction.getValue(ActionComponents.ANIME_ID.id)!!.asString.split(",")
+
+    for (idx in animeIdx) {
+      animeDAO.removeByRouletteAndIdx(rouletteId, idx)
+    }
+
+    val animes: List<Anime> = animeDAO.getAllByRoulette(rouletteId)
+    animeDAO.updateRouletteIdx(animes)
+
+    val me = messageSender.mountRouletteMessage(animes, rouletteName, rouletteId)
+    event.hook.editMessageEmbedsById(messageId, me).queue()
+  }
+
+  private fun editAnimeFromRoulette(event: ModalInteractionEvent) {
+    event.deferEdit().queue()
+    val message = event.hook.retrieveOriginal().complete()
+    val messageId = message.id
+
+    val title = message.embeds[0].title!!.split("-")
+    val rouletteId = Integer.parseInt(title[0].trim())
+    val rouletteName = title[1].trim()
+
+    val idx = event.interaction.getValue(ActionComponents.ANIME_IDX.id)!!.asString
+    val watched = event.interaction.getValue(ActionComponents.ANIME_WATCHED.id)!!.asString
+
+    animeDAO.updateAnime(rouletteId, Integer.parseInt(idx), Integer.parseInt(watched))
+
+    val animes: List<Anime> = animeDAO.getAllByRoulette(rouletteId)
+
+    val me = messageSender.mountRouletteMessage(animes, rouletteName, rouletteId)
+    event.hook.editMessageEmbedsById(messageId, me).queue()
+
+  }
+
+  private fun addAnimeToRoulette(event: ModalInteractionEvent) {
+    event.deferEdit().queue()
+    val message = event.hook.retrieveOriginal().complete()
+    val messageId = message.id
+
+    val title = message.embeds[0].title!!.split("-")
+    val rouletteId = Integer.parseInt(title[0].trim())
+    val rouletteName = title[1].trim()
+
+    val animeIds = event.interaction.getValue(ActionComponents.ANIME_ID.id)!!.asString.split(",")
+      .dropLastWhile { it.isEmpty() }
+      .toTypedArray()
+
+    saveAnimesToRoulette(animeIds, rouletteId)
+    val animes: List<Anime> = animeDAO.getAllByRoulette(rouletteId)
+
+    val me: MessageEmbed =
+      messageSender.mountRouletteMessage(animes, rouletteName, rouletteId)
+    event.hook.editMessageEmbedsById(messageId, me).queue()
+  }
+
+  private fun saveAnimesToRoulette(animeIds: Array<String>, rouletteId: Int) {
+    log.debug("Collecting anime data for [{}] animes", animeIds.size)
+    var rouletteIdx: Int = animeDAO.countByRouletteId(rouletteId)
+    rouletteIdx++
+    for (animeId in animeIds) {
+      log.debug("Collecting Anime ID [{}]", animeId)
+
+      val anilistDTO = aniListApi.getAnimeById(animeId)
+      val title = anilistDTO.data!!.media!!.title!!.romaji
+      val episodes = anilistDTO.data!!.media!!.episodes
+      val url = "https://anilist.co/anime/${anilistDTO.data!!.media!!.id}"
+
+      log.debug("Successfully collected anime [{}]", title)
+
+      val anime =
+        Anime(name = title, url = url, episodes = episodes, rouletteIdx = rouletteIdx++, rouletteId = rouletteId)
+
+      animeDAO.saveAnime(anime)
+    }
   }
 
   private fun saveUserAndToken(event: ModalInteractionEvent) {

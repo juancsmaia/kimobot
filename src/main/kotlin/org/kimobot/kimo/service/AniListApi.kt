@@ -19,10 +19,10 @@ class AniListApi {
 
   private val objectMapper: ObjectMapper = ObjectMapper()
 
-  fun getAnime(busca: String, tipo: String, page: Int?): AniListDTO {
+  fun findAnimeSearch(search: String, type: String, page: Int?): AniListDTO {
 
-    val query = ("query (\$type: MediaType, \$page: Int, \$perPage: Int, \$search: String) { "
-        + "    Page (page: \$page, perPage: \$perPage) { "
+    val query = ("{ "
+        + "    Page (page: ${page ?: 1}, perPage: 1) { "
         + "        pageInfo {"
         + "            total "
         + "            currentPage "
@@ -30,18 +30,20 @@ class AniListApi {
         + "            hasNextPage "
         + "            perPage "
         + "        } "
-        + "        media (search: \$search, type: \$type, sort: SEARCH_MATCH) { "
+        + "        media (search: \"$search\", type: $type, sort: SEARCH_MATCH) { "
         + "            coverImage { "
         + "                 medium "
         + "                 large "
         + "                 color "
         + "               }"
         + "            id "
+        + "            description "
         + "            status "
         + "            episodes "
         + "            chapters "
         + "            volumes "
         + "            genres "
+        + "            format "
         + "            title { "
         + "                romaji "
         + "            }"
@@ -49,15 +51,25 @@ class AniListApi {
         + "    }"
         + "}")
 
-    val variables: MutableMap<String, Any> = HashMap()
-    variables["search"] = busca
-    variables["type"] = tipo
-    variables["page"] = page ?: 1
-    variables["perPage"] = 1
+    val params: MutableMap<String, Any> = HashMap()
+    params["query"] = query
+
+    return sendRequest(params, null)
+  }
+
+  fun getAnimeById(id: String): AniListDTO {
+    val query = ("{ "
+        + "Media(id: $id) {"
+        + "    id "
+        + "    episodes "
+        + "    title {"
+        + "      romaji "
+        + "    }"
+        + "  }"
+        + "}")
 
     val params: MutableMap<String, Any> = HashMap()
     params["query"] = query
-    params["variables"] = variables
 
     return sendRequest(params, null)
   }

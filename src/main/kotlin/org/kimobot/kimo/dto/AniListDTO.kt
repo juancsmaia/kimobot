@@ -1,11 +1,13 @@
 package org.kimobot.kimo.dto
 
 import com.fasterxml.jackson.annotation.JsonProperty
+import javax.print.attribute.standard.Media
 
 data class AniListDTO(var data: Data? = null) {
 
   class Data(
     @JsonProperty("Page") var page: Page? = null,
+    @JsonProperty("Media") var media: Media? = null,
     @JsonProperty("SaveMediaListEntry") var savedMedia: SaveMedia? = null
   ) {
 
@@ -32,7 +34,8 @@ data class AniListDTO(var data: Data? = null) {
       var volumes: Int? = -1,
       var genres: List<String>? = null,
       var title: Title? = null,
-      var coverImage: CoverImage? = null
+      var coverImage: CoverImage? = null,
+      var format: String? = null
     ) {
 
       class CoverImage(var medium: String? = null, var large: String? = null, var color: String? = null)
