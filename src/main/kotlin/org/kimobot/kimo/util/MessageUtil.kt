@@ -7,7 +7,7 @@ class MessageUtil {
 
   companion object {
 
-    val ROULETTE_INACTIVE = "A Roleta está inativa e não aceitá alterações."
+    const val ROULETTE_INACTIVE = "A Roleta está inativa e não aceitá alterações."
 
     fun getMetaData(event: ButtonInteractionEvent): List<String?>? {
       val embed = event.message.embeds[0]

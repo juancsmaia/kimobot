@@ -24,13 +24,13 @@ class ModalListener : ListenerAdapter() {
   private val rouletteDAO = RouletteDAO()
 
   override fun onModalInteraction(event: ModalInteractionEvent) {
-    when (Modals.getModal(event.modalId)) {
-      Modals.TOKEN -> saveUserAndToken(event)
-      Modals.ANIME_ADD -> addAnimeToRoulette(event)
-      Modals.ANIME_EDIT -> editAnimeFromRoulette(event)
-      Modals.ANIME_REMOVE -> removeAnimeFromRoulette(event)
-      Modals.INFO_ANIME_ADD -> infoAnimeAddToRoulette(event)
-      null -> {}
+    when (event.modalId) {
+      Modals.TOKEN.id -> saveUserAndToken(event)
+      Modals.ANIME_ADD.id -> addAnimeToRoulette(event)
+      Modals.ANIME_EDIT.id -> editAnimeFromRoulette(event)
+      Modals.ANIME_REMOVE.id -> removeAnimeFromRoulette(event)
+      Modals.INFO_ANIME_ADD.id -> infoAnimeAddToRoulette(event)
+      else -> {}
     }
   }
 
@@ -40,8 +40,8 @@ class ModalListener : ListenerAdapter() {
     val rouletteName = event.interaction.getValue(ActionComponents.ROULETTE_NAME.id)!!.asString
     val guildId = event.guild!!.id
 
-    val rouletteId = rouletteDAO.getByNameAndGuildId(rouletteName, guildId)
-    if (rouletteId == null) {
+    val roulette = rouletteDAO.getByNameAndGuildId(rouletteName, guildId)
+    if (roulette == null) {
       event.hook.retrieveOriginal().complete().reply("Roleta [$rouletteName] não encontrada.").queue()
       return
     }
@@ -49,7 +49,7 @@ class ModalListener : ListenerAdapter() {
     val metaData = MessageUtil.getMetaData(event)
     val animeId = metaData!![2].toString()
 
-    saveAnimesToRoulette(arrayOf(animeId), rouletteId)
+    saveAnimesToRoulette(arrayOf(animeId), roulette.id!!)
 
     event.hook.retrieveOriginal().complete().reply("Anime adicionado à roleta.").queue()
   }

@@ -10,6 +10,7 @@ import org.kimobot.kimo.dao.RouletteDAO
 import org.kimobot.kimo.dto.enums.AniListType
 import org.kimobot.kimo.dto.enums.Buttons
 import org.kimobot.kimo.dto.enums.Command
+import org.kimobot.kimo.dto.enums.RouletteStatus
 import org.kimobot.kimo.model.Roulette
 import org.kimobot.kimo.service.AniListApi
 import org.kimobot.kimo.service.MessageSender
@@ -53,7 +54,7 @@ class MessageListener : ListenerAdapter() {
   private fun closeRoulette(event: MessageReceivedEvent, name: String) {
     val guildId = event.guild.id
     rouletteDAO.closeRoulette(name, guildId)
-    event.message.reply("Roleta [$name] foi encerrada e não aceitará mais atualizações.")
+    event.message.reply("Roleta [$name] foi encerrada e não aceitará mais atualizações.").queue()
   }
 
   private fun newRoulette(event: MessageReceivedEvent, name: String) {
@@ -69,26 +70,26 @@ class MessageListener : ListenerAdapter() {
 //      }
     }
 
-    val roulette = Roulette(name = name, guildId = guildId, active = true)
+    val roulette = Roulette(name = name, guildId = guildId, active = RouletteStatus.ACTIVE.name)
     val rouletteId: Int = rouletteDAO.createRoulette(roulette)
     log.info("Roulette created with ID: [$rouletteId]")
 
-    event.message.reply("Roleta criada. Utilize !roul $name para gerenciar a roleta.").queue()
+    event.message.reply("Roleta criada. Utilize [!roul $name] para gerenciar a roleta.").queue()
   }
 
   private fun getRouletteData(event: MessageReceivedEvent, name: String) {
 
     val guildId = event.guild.id
 
-    val rouletteId = rouletteDAO.getByNameAndGuildId(name, guildId)
-    if (rouletteId == null) {
+    val roulette = rouletteDAO.getByNameAndGuildId(name, guildId)
+    if (roulette == null) {
       messageSender.sendMessage(event, "Roleta [$name] não encontrada.")
       return
     }
 
-    val animes = animeDAO.getAllByRoulette(rouletteId)
+    val animes = animeDAO.getAllByRoulette(roulette.id)
 
-    messageSender.sendMessage(event, animes, name, rouletteId)
+    messageSender.sendMessage(event, animes, name, roulette.id)
   }
 
   private fun help(event: MessageReceivedEvent) {
@@ -98,7 +99,7 @@ class MessageListener : ListenerAdapter() {
       .addField(
         MessageEmbed.Field(
           "!${Command.NEW_ROULETTE.tag}",
-          "Comando para criar uma nova roleta." +
+          "Comando para criar uma nova roleta. Evite nomes com espaços" +
               "\n!newroul <nome>" +
               "\nExemplo: !newroul Roleta",
           false

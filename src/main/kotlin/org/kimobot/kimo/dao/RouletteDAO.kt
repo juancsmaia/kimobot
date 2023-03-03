@@ -4,6 +4,7 @@ import org.apache.commons.dbutils.QueryRunner
 import org.apache.commons.dbutils.handlers.BeanHandler
 import org.apache.commons.dbutils.handlers.BeanListHandler
 import org.apache.commons.dbutils.handlers.ScalarHandler
+import org.kimobot.kimo.dto.enums.RouletteStatus
 import org.kimobot.kimo.model.Roulette
 import org.kimobot.kimo.util.DataBaseConnection
 import org.slf4j.Logger
@@ -16,11 +17,12 @@ class RouletteDAO {
   private val log = LoggerFactory.getLogger(javaClass) as Logger
 
   private val qr = QueryRunner(DataBaseConnection.dataSource)
+  private val COLUMNS = "id, name, active, guild_id AS guildId"
 
-  fun getByNameAndGuildId(name: String, guildId: String): Int? {
+  fun getByNameAndGuildId(name: String, guildId: String): Roulette? {
     return try {
-      val sql = "SELECT id, name, active, guild_id AS guildId FROM roulette WHERE name = ? and guild_id = ?"
-      qr.query(sql, ScalarHandler(), name, guildId)
+      val sql = "SELECT $COLUMNS FROM roulette WHERE name = ? and guild_id = ?"
+      qr.query(sql, BeanHandler(Roulette::class.java), name, guildId)
     } catch (e: SQLException) {
       val errorMsg = "Error getting roulette NAME [${name}]"
       throw SQLException(errorMsg, e)
@@ -39,7 +41,7 @@ class RouletteDAO {
 
   fun closeRoulette(name: String, guildId: String) {
     try {
-      val sql = "UPDATE roulette SET active = false WHERE name = ? AND guild_id = ?"
+      val sql = "UPDATE roulette SET active = '${RouletteStatus.INACTIVE.name}' WHERE name = ? AND guild_id = ?"
       qr.update(sql, name, guildId)
     } catch (e: SQLException) {
       val errorMsg = "Error closing roulette [$name] for guild [$guildId]"
@@ -47,11 +49,10 @@ class RouletteDAO {
     }
   }
 
-  //TODO("arrumar isso")
-  fun getRouletteIsActive(name: String, guildId: String): String {
+  fun getRouletteIsActive(name: String, guildId: String): Roulette {
     return try {
-      val sql = "SELECT active FROM roulette WHERE name = ? AND guild_id = ?"
-      qr.query(sql, BeanHandler(String::class.java), name, guildId)
+      val sql = "SELECT $COLUMNS FROM roulette WHERE name = ? AND guild_id = ?"
+      qr.query(sql, BeanHandler(Roulette::class.java), name, guildId)
     } catch (e: SQLException) {
       val errorMsg = "Error getting roulette NAME [${name}]"
       throw SQLException(errorMsg, e)

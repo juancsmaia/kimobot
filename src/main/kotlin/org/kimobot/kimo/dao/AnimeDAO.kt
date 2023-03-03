@@ -17,7 +17,7 @@ class AnimeDAO {
   private val qr = QueryRunner(DataBaseConnection.dataSource)
 
   private val COLUMNS =
-    "id, name, url, episodes, watched, roulette_index as rouletteIdx, roulette_id as rouletteId"
+    "id, name, url, episodes, watched, roulette_index AS rouletteIdx, roulette_id AS rouletteId"
 
 
   fun saveAnime(anime: Anime): Anime {

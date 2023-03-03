@@ -18,8 +18,6 @@ import org.kimobot.kimo.model.Anime
 import org.kimobot.kimo.service.AniListApi
 import org.kimobot.kimo.service.MessageSender
 import org.kimobot.kimo.util.MessageUtil
-import org.kimobot.kimo.util.Parser
-import java.math.BigInteger
 
 class ButtonListener : ListenerAdapter() {
 
@@ -29,21 +27,26 @@ class ButtonListener : ListenerAdapter() {
   private val rouletteDAO = RouletteDAO()
 
   override fun onButtonInteraction(event: ButtonInteractionEvent) {
-    when (Buttons.getButton(event.componentId)) {
-      Buttons.NEXT -> nextPage(event)
-      Buttons.BACK -> backPage(event)
-      Buttons.TOKEN -> receiveToken(event)
-      Buttons.ADD -> addToRoulette(event)
-      Buttons.ADD_TO -> addFromInfoToRoulette(event)
-      Buttons.ROLL -> doRollAction(event)
-      Buttons.EDIT -> doEditAnimeAction(event)
-      Buttons.REMOVE -> doRemoveAction(event)
+    when (event.componentId) {
+      Buttons.NEXT.id -> nextPage(event)
+      Buttons.BACK.id -> backPage(event)
+      Buttons.TOKEN.id -> receiveToken(event)
+      Buttons.ADD.id -> addToRoulette(event)
+      Buttons.ADD_TO.id -> addFromInfoToRoulette(event)
+      Buttons.ROLL.id -> doRollAction(event)
+      Buttons.EDIT.id -> doEditAnimeAction(event)
+      Buttons.REMOVE.id -> doRemoveAction(event)
       else -> {}
     }
 
   }
 
   private fun addToRoulette(event: ButtonInteractionEvent) {
+    if (!validateActiveRoulette(event)) {
+      messageSender.sendMessage(event, MessageUtil.ROULETTE_INACTIVE)
+      return
+    }
+
     val animeIdInput =
       TextInput.create(ActionComponents.ANIME_ID.id, ActionComponents.ANIME_ID.tag, TextInputStyle.SHORT)
         .build()
@@ -53,6 +56,10 @@ class ButtonListener : ListenerAdapter() {
   }
 
   private fun addFromInfoToRoulette(event: ButtonInteractionEvent) {
+    if (!validateActiveRoulette(event)) {
+      messageSender.sendMessage(event, MessageUtil.ROULETTE_INACTIVE)
+      return
+    }
     val rouletteInput =
       TextInput.create(ActionComponents.ROULETTE_NAME.id, ActionComponents.ROULETTE_NAME.tag, TextInputStyle.SHORT)
         .build()
@@ -64,19 +71,19 @@ class ButtonListener : ListenerAdapter() {
   }
 
   private fun backPage(event: ButtonInteractionEvent) {
-    val tipoBusca = MessageUtil.getMetaData(event) as List<*>
-    val tipo = tipoBusca[0].toString()
-    val busca = tipoBusca[1].toString()
-    val pagina: Int = getPage(event, false)
-    mountPage(event, busca, tipo, pagina)
+    val typeSearch = MessageUtil.getMetaData(event) as List<*>
+    val type = typeSearch[0].toString()
+    val search = typeSearch[1].toString()
+    val page: Int = getPage(event, false)
+    mountPage(event, search, type, page)
   }
 
   private fun nextPage(event: ButtonInteractionEvent) {
-    val tipoBusca = MessageUtil.getMetaData(event) as List<*>
-    val tipo = tipoBusca[0].toString()
-    val busca = tipoBusca[1].toString()
-    val pagina: Int = getPage(event, true)
-    mountPage(event, busca, tipo, pagina)
+    val typeSearch = MessageUtil.getMetaData(event) as List<*>
+    val type = typeSearch[0].toString()
+    val search = typeSearch[1].toString()
+    val page: Int = getPage(event, true)
+    mountPage(event, search, type, page)
   }
 
   private fun getPage(event: ButtonInteractionEvent, next: Boolean): Int {
@@ -102,7 +109,7 @@ class ButtonListener : ListenerAdapter() {
 
     val me: MessageEmbed = messageSender.mountAniListMessageInfo(type!!.name, busca, aniListDTO)
     val pageInfo = aniListDTO.data!!.page!!.pageInfo
-    val botoes: ArrayList<ActionComponent> = if (pagina > 1) {
+    val buttons: ArrayList<ActionComponent> = if (pagina > 1) {
       if (pageInfo!!.hasNextPage!!) {
         arrayListOf(
           Button.primary(Buttons.BACK.id, Buttons.BACK.tag),
@@ -115,9 +122,9 @@ class ButtonListener : ListenerAdapter() {
       arrayListOf(Button.primary(Buttons.NEXT.id, Buttons.NEXT.tag))
     }
 
-    botoes.add(Button.success(Buttons.ADD_TO.id, Buttons.ADD_TO.tag))
+    buttons.add(Button.success(Buttons.ADD_TO.id, Buttons.ADD_TO.tag))
 
-    event.hook.editOriginalEmbeds(me).setActionRow(botoes).queue()
+    event.hook.editOriginalEmbeds(me).setActionRow(buttons).queue()
   }
 
   private fun receiveToken(event: ButtonInteractionEvent) {
@@ -145,6 +152,10 @@ class ButtonListener : ListenerAdapter() {
   }
 
   private fun doEditAnimeAction(event: ButtonInteractionEvent) {
+    if (!validateActiveRoulette(event)) {
+      messageSender.sendMessage(event, MessageUtil.ROULETTE_INACTIVE)
+      return
+    }
     val modal = editAnimeModal()
     event.replyModal(modal).queue()
   }
@@ -175,6 +186,10 @@ class ButtonListener : ListenerAdapter() {
   }
 
   private fun doRemoveAction(event: ButtonInteractionEvent) {
+    if (!validateActiveRoulette(event)) {
+      messageSender.sendMessage(event, MessageUtil.ROULETTE_INACTIVE)
+      return
+    }
     val modal = createRemoveAnimeModal()
     event.replyModal(modal).queue()
   }
@@ -189,7 +204,7 @@ class ButtonListener : ListenerAdapter() {
     val texts = getMessageTitle(event)
     val rouletteName = texts[2]
     val guildId = event.guild!!.id
-    val active = rouletteDAO.getRouletteIsActive(rouletteName, guildId)
-    return active != "0"
+    val roulette = rouletteDAO.getRouletteIsActive(rouletteName, guildId)
+    return roulette.active == RouletteStatus.ACTIVE.name
   }
 }

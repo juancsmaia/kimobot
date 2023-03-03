@@ -95,7 +95,7 @@ class MessageSender {
       .setActionRow(
         Button.primary(Buttons.ADD.id, Buttons.ADD.tag),
         Button.primary(Buttons.EDIT.id, Buttons.EDIT.tag),
-        Button.primary(Buttons.REMOVE.id, Buttons.REMOVE.tag),
+        Button.danger(Buttons.REMOVE.id, Buttons.REMOVE.tag),
         Button.success(Buttons.ROLL.id, Buttons.ROLL.tag)
       )
       .queue()
