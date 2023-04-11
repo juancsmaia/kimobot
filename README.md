@@ -4,10 +4,25 @@ Bot feito para realizar diversas ações realizadas a animes e mangás.
 
 ### Comandos
 #### prefixo: !
-##### register
-Utilizado para autenticar o bot para gerenciamento do [Anilist](https://anilist.co/)
+##### help
+Retorna os comandos disponíveis do bot.
 
-##### info \<tipo> \<busca>
-Utilizado para buscar informações de animes/mangás.
+##### info \<busca>
+Busca informações de animes no [AniList](https://anilist.co/).
 
-```!info anime naruto```
+```!info naruto```
+
+##### newroul \<nome>
+Cria uma nova roleta
+
+```!newroul roleta```
+
+##### roul \<nome>
+Busca as informações de uma roleta existente.
+
+```!roul roleta```
+
+##### close \<nome>
+Encerra uma roleta. Uma vez encerrada a roleta nao irá mais aceitar novas entradas ou rolagens.
+
+```!close roleta```
