@@ -52,3 +52,6 @@ Thumbs.db
 
 # Properties
 application.properties
+gradle.properties
+gradlew
+gradlew.bat
