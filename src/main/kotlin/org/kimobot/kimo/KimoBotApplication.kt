@@ -12,6 +12,7 @@ import org.kimobot.kimo.listener.ModalListener
 import org.kimobot.kimo.util.DataBaseConnection
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import java.util.*
 import java.util.concurrent.TimeUnit
 
 private val log = LoggerFactory.getLogger("Main") as Logger
@@ -29,16 +30,24 @@ class KimoBotApplication {
     private fun botInit() {
       RestAction.setDefaultTimeout(10, TimeUnit.SECONDS)
 
-      val token = "OTc5NDQxNTA2NzkwMjc3MjAy.G4zY_T.KOlvMWqgSkcKpLJ5QcaxeHPTvAy_7gRqeYtM8s"
+      try {
+        KimoBotApplication::class.java.classLoader.getResourceAsStream("application.properties").use { rs ->
+          val prop = Properties()
+          prop.load(rs)
+          val token = prop.getProperty("discord.token")
 
-      val jda = JDABuilder.createDefault(token)
-        .addEventListeners(MessageListener(), ButtonListener(), ModalListener(), MenuListener())
-        .enableIntents(GatewayIntent.MESSAGE_CONTENT)
-        .setActivity(Activity.playing("!help"))
-        .build()
+          val jda = JDABuilder.createDefault(token)
+            .addEventListeners(MessageListener(), ButtonListener(), ModalListener(), MenuListener())
+            .enableIntents(GatewayIntent.MESSAGE_CONTENT)
+            .setActivity(Activity.playing("!help"))
+            .build()
 
-      jda.awaitReady()
-      log.info("Bot Ready!")
+          jda.awaitReady()
+          log.info("Bot Ready!")
+        }
+      } catch (e: Exception) {
+        log.error(e.message)
+      }
     }
 
     private fun runFlyway() {
